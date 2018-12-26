@@ -18,15 +18,18 @@ class Logger:
             raise TypeError("Output method '{}' not yet implemented.".format(self.output_method))
 
     @staticmethod
-    def msg_template(type, msg):
+    def msg_template(typ, msg, tag=None):
         time_string = dt.now()
-        return "{}: {} - {}".format(time_string, type, msg)
+        if tag:
+            return "{}: {} [{}] - {}".format(time_string, tag, typ, msg)
+        else:
+            return "{}: {} - {}".format(time_string, typ, msg)
 
-    def log(self, msg):
-        self.write_output(self.msg_template("LOG", msg))
+    def log(self, msg, t=None):
+        self.write_output(self.msg_template("LOG", msg, tag=t))
 
-    def err(self, msg):
-        self.write_output(self.msg_template("ERR", msg))
+    def err(self, msg, t=None):
+        self.write_output(self.msg_template("ERR", msg, tag=t))
 
-    def war(self, msg):
-        self.write_output(self.msg_template("WAR", msg))
+    def war(self, msg, t=None):
+        self.write_output(self.msg_template("WAR", msg, tag=t))
