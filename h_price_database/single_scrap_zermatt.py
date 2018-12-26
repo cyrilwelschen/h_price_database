@@ -19,8 +19,13 @@ def parse(url):
     print(response.current_url)
 
 
-if __name__ == "__main__":
+def run(check_in_date, check_out_date):
     vdisplay = Xvfb()
     vdisplay.start()
-    parse("https://www.zermatt.ch/en/book")
+    base_url = "https://www.zermatt.ch/en/content/view/full/4716/#/vacancy?"
+    parse(base_url+"datefrom={}&dateto={}&rooms=1&adults1=2&type=all".format(check_in_date, check_out_date))
     vdisplay.stop()
+
+
+if __name__ == "__main__":
+    run("12.01.2019", "19.01.2019")
