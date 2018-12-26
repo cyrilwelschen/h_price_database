@@ -30,6 +30,26 @@ def parse(url):
             hotel_price = hotel.xpath('.//span[contains(@ng-bind, "house.lis_price")]')
             print(hotel_name[0].text_content(), hotel_location[0].text_content(), hotel_price[0].text_content())
 
+    next_page_buttons = response.find_elements_by_xpath('//a[@class="ng-binding"]')
+    if next_page_buttons:
+        print(len(next_page_buttons))
+        cookieconsent = response.find_elements_by_xpath('//a[@aria-label="dismiss cookie message"]')
+        if cookieconsent:
+            cookieconsent[0].click()
+            sleep(2)
+        next_page_buttons[-2].click()
+        print(response.current_url)
+
+        parser = html.fromstring(response.page_source, response.current_url)
+        hotels_on_page = parser.xpath('//div[@class="media ng-scope"]')
+        if hotels_on_page:
+            log.log(len(hotels_on_page))
+            for hotel in hotels_on_page:
+                hotel_name = hotel.xpath('.//span[@ng-bind="house.lis_name"]')
+                hotel_location = hotel.xpath('.//span[@ng-bind="house.lis_city"]')
+                hotel_price = hotel.xpath('.//span[contains(@ng-bind, "house.lis_price")]')
+                print(hotel_name[0].text_content(), hotel_location[0].text_content(), hotel_price[0].text_content())
+
 
 def run(check_in_date, check_out_date):
     vdisplay = Xvfb()
