@@ -12,34 +12,25 @@ from lxml import html
 log = Logger()
 
 
-def parse(url):
-    # log.log("Starting")
-    response = webdriver.Chrome('../drivers/chromedriver')
-    response.get(url)
-    print(response.current_url)
-    # todo: periodically check if search is finised and then go on instead of sleeping for 10 sec
-    sleep(10)
+class SinlgeScrap:
 
-    parser = html.fromstring(response.page_source, response.current_url)
-    hotels_on_page = parser.xpath('//div[@class="media ng-scope"]')
-    if hotels_on_page:
-        log.log(len(hotels_on_page))
-        for hotel in hotels_on_page:
-            hotel_name = hotel.xpath('.//span[@ng-bind="house.lis_name"]')
-            hotel_location = hotel.xpath('.//span[@ng-bind="house.lis_city"]')
-            hotel_price = hotel.xpath('.//span[contains(@ng-bind, "house.lis_price")]')
-            print(hotel_name[0].text_content(), hotel_location[0].text_content(), hotel_price[0].text_content())
+    def __init__(self):
+        self.response = None
 
-    next_page_buttons = response.find_elements_by_xpath('//a[@class="ng-binding"]')
-    if next_page_buttons:
-        print(len(next_page_buttons))
-        cookieconsent = response.find_elements_by_xpath('//a[@aria-label="dismiss cookie message"]')
+    def if_cookies(self):
+        cookieconsent = self.response.find_elements_by_xpath('//a[@aria-label="dismiss cookie message"]')
         if cookieconsent:
             cookieconsent[0].click()
             sleep(2)
-        next_page_buttons[-2].click()
-        print(response.current_url)
 
+    def parse(self, url):
+        # log.log("Starting")
+        response = webdriver.Chrome('../drivers/chromedriver')
+        response.get(url)
+        print(response.current_url)
+        # todo: periodically check if search is finised and then go on instead of sleeping for 10 sec
+        sleep(10)
+        # run through hotels
         parser = html.fromstring(response.page_source, response.current_url)
         hotels_on_page = parser.xpath('//div[@class="media ng-scope"]')
         if hotels_on_page:
@@ -49,13 +40,32 @@ def parse(url):
                 hotel_location = hotel.xpath('.//span[@ng-bind="house.lis_city"]')
                 hotel_price = hotel.xpath('.//span[contains(@ng-bind, "house.lis_price")]')
                 print(hotel_name[0].text_content(), hotel_location[0].text_content(), hotel_price[0].text_content())
+        # go to next page
+        next_page_buttons = response.find_elements_by_xpath('//a[@class="ng-binding"]')
+        if next_page_buttons:
+            self.response = response
+            self.if_cookies()
+            print(len(next_page_buttons))
+            next_page_buttons[-2].click()
+            print(response.current_url)
+            # run through hotels
+            parser = html.fromstring(response.page_source, response.current_url)
+            hotels_on_page = parser.xpath('//div[@class="media ng-scope"]')
+            if hotels_on_page:
+                log.log(len(hotels_on_page))
+                for hotel in hotels_on_page:
+                    hotel_name = hotel.xpath('.//span[@ng-bind="house.lis_name"]')
+                    hotel_location = hotel.xpath('.//span[@ng-bind="house.lis_city"]')
+                    hotel_price = hotel.xpath('.//span[contains(@ng-bind, "house.lis_price")]')
+                    print(hotel_name[0].text_content(), hotel_location[0].text_content(), hotel_price[0].text_content())
 
 
 def run(check_in_date, check_out_date):
     vdisplay = Xvfb()
     vdisplay.start()
     base_url = "https://www.zermatt.ch/en/content/view/full/4716/#/vacancy?"
-    parse(base_url+"datefrom={}&dateto={}&rooms=1&adults1=2&type=all".format(check_in_date, check_out_date))
+    scrap = SinlgeScrap()
+    scrap.parse(base_url+"datefrom={}&dateto={}&rooms=1&adults1=2&type=all".format(check_in_date, check_out_date))
     vdisplay.stop()
 
 
