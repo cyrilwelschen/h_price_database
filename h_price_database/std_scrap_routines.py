@@ -51,6 +51,26 @@ class Explorer:
         self.version = "0.0.1"
         self.response = None
 
+    def push_button(self, pre_action_check=True, post_action_check=True, **allowed_exceptions):
+        self.check(pre_action_check, post_action_check)
+        pass
+
+    def set_value(self, pre_action_check=True, post_action_check=True, **allowed_exceptions):
+        self.check(pre_action_check, post_action_check)
+        pass
+
+    def check(self, pre, post):
+        if pre:
+            self.pre_action_check()
+        if post:
+            self.post_action_check()
+
+    def pre_action_check(self):
+        pass
+
+    def post_action_check(self):
+        pass
+
     # Example of explore
     """
     def handle_cookies(self):
