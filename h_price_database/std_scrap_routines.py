@@ -4,6 +4,9 @@ File contains standard scraping routines/functions. E.g. to search for button an
 
 
 from lxml import html
+from h_price_database.logger import Logger
+
+log = Logger()
 
 
 class Analyser:
@@ -53,6 +56,11 @@ class Explorer:
 
     def push_button(self, pre_action_check=True, post_action_check=True, **allowed_exceptions):
         self.check(pre_action_check, post_action_check)
+        try:
+            pass
+        except allowed_exceptions as e:
+            log.war(e, "Std_Explorer_Allowed_Exception")
+            pass
         pass
 
     def set_value(self, pre_action_check=True, post_action_check=True, **allowed_exceptions):
