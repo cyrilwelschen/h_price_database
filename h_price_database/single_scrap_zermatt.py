@@ -37,8 +37,7 @@ class ScraperZermatt:
                 page_results.append([hotel_name, hotel_location, hotel_price])
         return page_results
 
-    def analyse(self):
-        # scrap first page
+    def main_routine(self):
         pages = 10
         results = []
         while pages > 0:
@@ -67,7 +66,7 @@ class ScraperZermatt:
         self.response.get(full_url)
         # todo: periodically check if search is finised and then scrap on instead of sleeping for 10 sec
         sleep(10)
-        self.analyse()
+        self.main_routine()
         vdisplay.stop()
 
 
