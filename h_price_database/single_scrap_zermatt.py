@@ -47,6 +47,8 @@ class ScraperZermatt:
             if next_page_buttons:
                 try:
                     next_page_buttons[-2].click()
+                except err.ElementNotVisibleException:
+                    continue
                 except err.WebDriverException as e:
                     log.war(e)
                     self.handle_cookies()
@@ -72,4 +74,4 @@ class ScraperZermatt:
 
 if __name__ == "__main__":
     scraper = ScraperZermatt()
-    scraper.scrap("12.01.2019", "19.01.2019")
+    scraper.scrap("12.03.2019", "19.03.2019")
