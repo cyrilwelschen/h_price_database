@@ -78,6 +78,10 @@ class ScraperZermatt:
         self.main_routine()
         vdisplay.stop()
 
+    @staticmethod
+    def dateformat():
+        return "%d.%m.%Y"
+
 
 if __name__ == "__main__":
     scraper = ScraperZermatt()
