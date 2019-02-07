@@ -29,15 +29,18 @@ class ScraperZermatt:
         parser = html.fromstring(self.response.page_source, self.response.current_url)
         hotels_on_page = parser.xpath('//div[@class="media ng-scope"]')
         if hotels_on_page:
-            log.log(len(hotels_on_page))
+            log.log("Nr of hotels on page: "+str(len(hotels_on_page)))
             for hotel in hotels_on_page:
                 hotel_name = hotel.xpath('.//span[@ng-bind="house.lis_name"]')[0].text_content()
                 hotel_location = hotel.xpath('.//span[@ng-bind="house.lis_city"]')[0].text_content()
                 hotel_price = hotel.xpath('.//span[contains(@ng-bind, "house.lis_price")]')[0].text_content()
+                # todo: add info, e.g. 8 bed appartment
+                # todo: add number of stars
                 page_results.append([hotel_name, hotel_location, hotel_price])
         return page_results
 
     def main_routine(self):
+        # todo: determine how many pages are acutally there
         pages = 10
         results = []
         while pages > 0:
@@ -47,8 +50,8 @@ class ScraperZermatt:
             if next_page_buttons:
                 try:
                     next_page_buttons[-2].click()
-                except err.ElementNotVisibleException:
-                    continue
+                    # except err.ElementNotVisibleException:
+                    # continue
                 except err.WebDriverException as e:
                     log.war(e)
                     self.handle_cookies()
@@ -56,8 +59,11 @@ class ScraperZermatt:
         for page in results:
             for hotel in page:
                 print(hotel)
+        # todo: save to db instead of printing
+        # todo: add info about check-in/out, timestamp of run, duration of stay, normalised price
+        # todo: add column in db for "suspicious" behavior, e.g. not as many prices/hotels as expected
         print(results)
-        print(len(results))
+        print("nr of pages scraped: ", len(results))
 
     def scrap(self, check_in_date, check_out_date):
         vdisplay = Xvfb()
@@ -67,6 +73,7 @@ class ScraperZermatt:
         self.response = webdriver.Chrome('../drivers/chromedriver')
         self.response.get(full_url)
         # todo: periodically check if search is finised and then scrap on instead of sleeping for 10 sec
+        #  key will be the "A total of" ... accomodations were found.
         sleep(10)
         self.main_routine()
         vdisplay.stop()
