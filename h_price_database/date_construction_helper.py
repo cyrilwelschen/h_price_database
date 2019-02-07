@@ -43,8 +43,9 @@ class DateConstructionHelper:
             sdc.append(a)
             sdc.append(b)
             sdc.append(c)
-        print(sdc)
-        return self.tuples_to_dic(sdc)
+        res = self.tuples_to_dic(sdc)
+        print(res)
+        return res
 
     def test_standard_date_cycle(self, full=True):
         for pair in self.standard_date_cycle():
@@ -66,11 +67,11 @@ class DateConstructionHelper:
     def tuples_to_dic(self, sdc):
         result = []
         for pair in sdc:
-            result.append((self.date_to_string(pair[0]), self.date_to_string(pair[1])))
+            result.append({"check_in": self.date_to_string(pair[0]), "check_out": self.date_to_string(pair[1])})
         return result
 
 
 if __name__ == "__main__":
     dC = DateConstructionHelper()
     li = dC.standard_date_cycle()
-    dC.test_standard_date_cycle()
+    # dC.test_standard_date_cycle()

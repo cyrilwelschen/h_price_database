@@ -5,9 +5,10 @@ File containing functionality to scrap zermatt.ch for hotel prices
 from selenium import webdriver
 from selenium.common import exceptions as err
 from xvfbwrapper import Xvfb
-from h_price_database.logger import Logger
 from time import sleep
 from lxml import html
+from h_price_database.logger import Logger
+from h_price_database.date_construction_helper import DateConstructionHelper
 
 
 log = Logger()
@@ -36,7 +37,7 @@ class ScraperZermatt:
                 hotel_price = hotel.xpath('.//span[contains(@ng-bind, "house.lis_price")]')[0].text_content()
                 # todo: add info, e.g. 8 bed appartment
                 # todo: add number of stars
-                page_results.append([hotel_name, hotel_location, hotel_price])
+                page_results.append({"name": hotel_name, "destination": hotel_location, "price": hotel_price})
         return page_results
 
     def main_routine(self):
@@ -56,14 +57,9 @@ class ScraperZermatt:
                     log.war(e)
                     self.handle_cookies()
             pages -= 1
-        for page in results:
-            for hotel in page:
-                print(hotel)
-        # todo: save to db instead of printing
-        # todo: add info about check-in/out, timestamp of run, duration of stay, normalised price
-        # todo: add column in db for "suspicious" behavior, e.g. not as many prices/hotels as expected
-        print(results)
-        print("nr of pages scraped: ", len(results))
+        # print(results)
+        # print("nr of pages scraped: ", len(results))
+        return results
 
     def scrap(self, check_in_date, check_out_date):
         vdisplay = Xvfb()
@@ -75,8 +71,9 @@ class ScraperZermatt:
         # todo: periodically check if search is finised and then scrap on instead of sleeping for 10 sec
         #  key will be the "A total of" ... accomodations were found.
         sleep(10)
-        self.main_routine()
+        result = self.main_routine()
         vdisplay.stop()
+        return result
 
     @staticmethod
     def dateformat():
@@ -85,4 +82,5 @@ class ScraperZermatt:
 
 if __name__ == "__main__":
     scraper = ScraperZermatt()
-    scraper.scrap("12.03.2019", "19.03.2019")
+    print(scraper.scrap("12.03.2019", "19.03.2019"))
+

@@ -21,9 +21,22 @@ class ScrapOrchestrator:
         self.setup_db()
 
     def setup_db(self):
-        pass
+        # MUST HAVES: name, check_in, check_out, price, scrap_timestamp
+        # DERIVED MUST HAVES: stay_duration, normalised_price
+        # OPTIONAL: destination, stars, hotel_info, err_war, accomodation_type
+        self.db.create_table("scraps",
+                             ["name", "check_in", "check_out", "price", "scrap_timestamp", "stay_duration",
+                              "normalised_price", "destination", "stars", "hotel_info", "err_war", "accomodation_type"],
+                             ["text", "text", "text", "integer", "text", "integer",
+                              "integer", "text", "integer", "text", "text", "text"])
 
     def start(self):
-        for check_in, check_out in self.date_constructor.standard_date_cycle():
-            single_scrp_output = self.scraper.scrap(check_in, check_out)
-            # todo: save to db
+        date_dics = self.date_constructor
+        check_ins = []
+        check_outs = []
+        for di in date_dics:
+            check_ins.append(di["check_in"])
+            check_outs.append(di["check_out"])
+        for i, o in zip(check_ins, check_outs):
+            print(i, o)
+            scrap_result = self.scraper.scrap(i, o)
