@@ -8,7 +8,6 @@ from xvfbwrapper import Xvfb
 from time import sleep
 from lxml import html
 from h_price_database.logger import Logger
-from h_price_database.date_construction_helper import DateConstructionHelper
 
 
 log = Logger()
@@ -18,6 +17,7 @@ class ScraperZermatt:
 
     def __init__(self):
         self.response = None
+        self.scrap_site = "zermatt.ch"
 
     def handle_cookies(self):
         cookieconsent = self.response.find_elements_by_xpath('//a[@aria-label="dismiss cookie message"]')
@@ -35,9 +35,14 @@ class ScraperZermatt:
                 hotel_name = hotel.xpath('.//span[@ng-bind="house.lis_name"]')[0].text_content()
                 hotel_location = hotel.xpath('.//span[@ng-bind="house.lis_city"]')[0].text_content()
                 hotel_price = hotel.xpath('.//span[contains(@ng-bind, "house.lis_price")]')[0].text_content()
-                # todo: add info, e.g. 8 bed appartment
-                # todo: add number of stars
-                page_results.append({"name": hotel_name, "destination": hotel_location, "price": hotel_price})
+                try:
+                    accomodation_info = hotel.xpath('.//span[contains(@ng-bind, "house.lis_name_add")]')[0].text_content()
+                except IndexError:
+                    accomodation_info = ""
+                stars = len(hotel.xpath('.//i[@class="icon-star icon-hotel-star ng-scope"]'))
+                page_results.append({"name": hotel_name, "destination": hotel_location, "price": hotel_price,
+                                     "accomodation_info": accomodation_info, "stars": stars})
+                print(accomodation_info, stars)
         return page_results
 
     def main_routine(self):
