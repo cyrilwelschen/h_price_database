@@ -36,34 +36,40 @@ class ScraperZermatt:
                 hotel_location = hotel.xpath('.//span[@ng-bind="house.lis_city"]')[0].text_content()
                 hotel_price = hotel.xpath('.//span[contains(@ng-bind, "house.lis_price")]')[0].text_content()
                 try:
-                    accomodation_info = hotel.xpath('.//span[contains(@ng-bind, "house.lis_name_add")]')[0].text_content()
+                    accomodation_info = hotel.xpath('.//p[contains(@ng-bind, "house.lis_name_add")]')[0].text_content()
                 except IndexError:
                     accomodation_info = ""
                 stars = len(hotel.xpath('.//i[@class="icon-star icon-hotel-star ng-scope"]'))
                 page_results.append({"name": hotel_name, "destination": hotel_location, "price": hotel_price,
                                      "accomodation_info": accomodation_info, "stars": stars})
-                print(accomodation_info, stars)
         return page_results
 
     def main_routine(self):
-        # todo: determine how many pages are acutally there
-        pages = 10
+        last_page_reached = False
+        safety_counter = 0
         results = []
-        while pages > 0:
+        while not last_page_reached:
             results.append(self.analyse_page())
             # go to next page
-            next_page_buttons = self.response.find_elements_by_xpath('//a[@class="ng-binding"]')
-            if next_page_buttons:
+            next_page_links = self.response.find_elements_by_xpath('//a[@class="ng-binding"]')
+            if next_page_links:
                 try:
-                    next_page_buttons[-2].click()
+                    next_page_links[-2].click()
                     # except err.ElementNotVisibleException:
                     # continue
                 except err.WebDriverException as e:
                     log.war(e)
                     self.handle_cookies()
-            pages -= 1
-        # print(results)
-        # print("nr of pages scraped: ", len(results))
+
+            next_page_buttons = self.response.find_elements_by_xpath('//li[@ng-repeat="page in pages"]')
+            last_page_button_class = next_page_buttons[-1].get_attribute("class")
+            if last_page_button_class == "ng-scope disabled":
+                last_page_reached = True
+            safety_counter += 1
+            if safety_counter > 30:
+                last_page_reached = True
+
+        print(safety_counter)
         return results
 
     def scrap(self, check_in_date, check_out_date):
@@ -73,12 +79,29 @@ class ScraperZermatt:
         full_url = base_url + "datefrom={}&dateto={}&rooms=1&adults1=2&type=all".format(check_in_date, check_out_date)
         self.response = webdriver.Chrome('../drivers/chromedriver')
         self.response.get(full_url)
-        # todo: periodically check if search is finised and then scrap on instead of sleeping for 10 sec
-        #  key will be the "A total of" ... accomodations were found.
-        sleep(10)
-        result = self.main_routine()
+        self.wait_for_load_finish()
+        list_of_list_results = self.main_routine()
         vdisplay.stop()
-        return result
+        master_list = []
+        for li in list_of_list_results:
+            master_list += li
+        return master_list
+
+    def wait_for_load_finish(self):
+        timer = 0
+        while timer < 10:
+            sleep(1)
+            timer += 1
+            loading_string = self.response.find_elements_by_xpath('//div[@class="result_info ng-scope"]')
+            try:
+                search_progress_string = loading_string[0].text
+                if "A total" in search_progress_string:
+                    timer = 11
+                print("progress string: ".format(search_progress_string))
+                print("breaking timer")
+            except AttributeError:
+                print("finder failed")
+            print("loading since {} sec".format(timer))
 
     @staticmethod
     def dateformat():
@@ -87,5 +110,7 @@ class ScraperZermatt:
 
 if __name__ == "__main__":
     scraper = ScraperZermatt()
-    print(scraper.scrap("12.03.2019", "19.03.2019"))
+    result = scraper.scrap("17.05.2019", "19.05.2019")
+    print(result)
+    print(len(result))
 
