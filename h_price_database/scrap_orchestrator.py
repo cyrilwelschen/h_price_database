@@ -42,19 +42,31 @@ class ScrapOrchestrator:
         for di in date_dics:
             check_ins.append(di["check_in"])
             check_outs.append(di["check_out"])
-        counter = 0
+        testing_counter = 0
         for i, o in zip(check_ins, check_outs):
-            counter += 1
-            if counter <= 10:
-                print("Scraping run {}: ".format(counter), i, o)
-                # todo: start subprocess and retry if returns with an error (without subprocess whole cycling is broke)
-                scrap_result = self.scraper.scrap(i, o)
-                if scrap_result and len(scrap_result) > 5:
-                    self.check_in = i
-                    self.check_out = o
-                    self.scraped_to_db(scrap_result)
-                    self.db.commit()
+            testing_counter += 1
+            """
+            if testing_counter <= 10:
+            """
+            print("Scraping run {}: ".format(testing_counter), i, o)
+            scrap_result = self.scrap_safely(i, o, retries=3)
+            if scrap_result and len(scrap_result) > 1:
+                self.check_in = i
+                self.check_out = o
+                self.scraped_to_db(scrap_result)
+                self.db.commit()
         self.db.close()
+
+    def scrap_safely(self, i, o, retries=1):
+        retry_counter = 0
+        scrap_result = None
+        if retry_counter < retries:
+            try:
+                scrap_result = self.scraper.scrap(i, o)
+            except Exception as e:
+                self.log.log(e)
+                retry_counter += 1
+        return scrap_result
 
     def scraped_to_db(self, list_of_dics):
         for dic in list_of_dics:
@@ -70,7 +82,8 @@ class ScrapOrchestrator:
         check_out_dt = dt.strptime(self.check_out, self.scraper.dateformat())
         day_delta = check_out_dt - check_in_dt
         single_hotel_dic["stay_duration"] = day_delta.days
-        single_hotel_dic["normalised_price"] = str(int(float(single_hotel_dic["price"].replace(",", ""))/day_delta.days))
+        single_hotel_dic["normalised_price"] = str(
+            int(float(single_hotel_dic["price"].replace(",", "")) / day_delta.days))
         single_hotel_dic["accomodation_type"] = "Hotel" if "Hotel" in single_hotel_dic["name"] else ""
         for col in DB_COLUMNS:
             try:
@@ -82,5 +95,5 @@ class ScrapOrchestrator:
 
 
 if __name__ == "__main__":
-    orchestrator = ScrapOrchestrator("/home/cyril/Desktop/scrap_test_one.db")
+    orchestrator = ScrapOrchestrator("/home/cyril/Desktop/scrap_test_two.db")
     orchestrator.start()

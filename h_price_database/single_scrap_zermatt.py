@@ -89,7 +89,7 @@ class ScraperZermatt:
 
     def wait_for_load_finish(self):
         timer = 0
-        while timer < 10:
+        while timer < 30:
             sleep(1)
             timer += 1
             loading_string = self.response.find_elements_by_xpath('//div[@class="result_info ng-scope"]')
