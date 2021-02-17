@@ -1,8 +1,11 @@
 from selenium import webdriver
 from time import sleep
+import chromedriver_autoinstaller
+
+chromedriver_autoinstaller.install()
 
 if __name__ == "__main__":
-    response = webdriver.Chrome('./drivers/chromedriver')
+    response = webdriver.Chrome()
     # response.get("https://internal.swissptt.ch/indigo/win/")
     response.get("https://internal.swissptt.ch/indigo/win/QueryBuilder/DetailAntenna?entityModelName=PA_ANTENNA_P_SEARCHEXTENDED&rid=2040&execute=1")
     print(response)

@@ -7,6 +7,9 @@ from selenium.common import exceptions as err
 from time import sleep
 from lxml import html
 from logger import Logger
+import chromedriver_autoinstaller
+
+chromedriver_autoinstaller.install()
 
 
 log = Logger()
@@ -86,7 +89,7 @@ class ScraperZermatt:
         full_url = base_url + \
             "datefrom={}&dateto={}&rooms=1&adults1=2&type=all".format(
                 check_in_date, check_out_date)
-        self.response = webdriver.Chrome('../drivers/chromedriver')
+        self.response = webdriver.Chrome()
         self.response.get(full_url)
         self.wait_for_load_finish()
         list_of_list_results = self.main_routine()
@@ -119,6 +122,6 @@ class ScraperZermatt:
 
 if __name__ == "__main__":
     scraper = ScraperZermatt()
-    result = scraper.scrap("17.08.2020", "19.08.2020")
+    result = scraper.scrap("17.03.2021", "19.03.2021")
     print(result)
     print(len(result))
