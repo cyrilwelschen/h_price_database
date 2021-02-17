@@ -4,10 +4,9 @@ File containing functionality to scrap zermatt.ch for hotel prices
 
 from selenium import webdriver
 from selenium.common import exceptions as err
-from xvfbwrapper import Xvfb
 from time import sleep
 from lxml import html
-from h_price_database.logger import Logger
+from logger import Logger
 
 
 log = Logger()
@@ -20,26 +19,33 @@ class ScraperZermatt:
         self.scrap_site = "zermatt.ch"
 
     def handle_cookies(self):
-        cookieconsent = self.response.find_elements_by_xpath('//a[@aria-label="dismiss cookie message"]')
+        cookieconsent = self.response.find_elements_by_xpath(
+            '//a[@aria-label="dismiss cookie message"]')
         if cookieconsent:
             cookieconsent[0].click()
             sleep(2)
 
     def analyse_page(self):
         page_results = []
-        parser = html.fromstring(self.response.page_source, self.response.current_url)
+        parser = html.fromstring(
+            self.response.page_source, self.response.current_url)
         hotels_on_page = parser.xpath('//div[@class="media ng-scope"]')
         if hotels_on_page:
             log.log("Nr of hotels on page: "+str(len(hotels_on_page)))
             for hotel in hotels_on_page:
-                hotel_name = hotel.xpath('.//span[@ng-bind="house.lis_name"]')[0].text_content()
-                hotel_location = hotel.xpath('.//span[@ng-bind="house.lis_city"]')[0].text_content()
-                hotel_price = hotel.xpath('.//span[contains(@ng-bind, "house.lis_price")]')[0].text_content()
+                hotel_name = hotel.xpath(
+                    './/span[@ng-bind="house.lis_name"]')[0].text_content()
+                hotel_location = hotel.xpath(
+                    './/span[@ng-bind="house.lis_city"]')[0].text_content()
+                hotel_price = hotel.xpath(
+                    './/span[contains(@ng-bind, "house.lis_price")]')[0].text_content()
                 try:
-                    accomodation_info = hotel.xpath('.//p[contains(@ng-bind, "house.lis_name_add")]')[0].text_content()
+                    accomodation_info = hotel.xpath(
+                        './/p[contains(@ng-bind, "house.lis_name_add")]')[0].text_content()
                 except IndexError:
                     accomodation_info = ""
-                stars = len(hotel.xpath('.//i[@class="icon-star icon-hotel-star ng-scope"]'))
+                stars = len(hotel.xpath(
+                    './/i[@class="icon-star icon-hotel-star ng-scope"]'))
                 page_results.append({"name": hotel_name, "destination": hotel_location, "price": hotel_price,
                                      "accomodation_info": accomodation_info, "stars": stars})
         return page_results
@@ -51,7 +57,8 @@ class ScraperZermatt:
         while not last_page_reached:
             results.append(self.analyse_page())
             # go to next page
-            next_page_links = self.response.find_elements_by_xpath('//a[@class="ng-binding"]')
+            next_page_links = self.response.find_elements_by_xpath(
+                '//a[@class="ng-binding"]')
             if next_page_links:
                 try:
                     next_page_links[-2].click()
@@ -61,8 +68,10 @@ class ScraperZermatt:
                     log.war(e)
                     self.handle_cookies()
 
-            next_page_buttons = self.response.find_elements_by_xpath('//li[@ng-repeat="page in pages"]')
-            last_page_button_class = next_page_buttons[-1].get_attribute("class")
+            next_page_buttons = self.response.find_elements_by_xpath(
+                '//li[@ng-repeat="page in pages"]')
+            last_page_button_class = next_page_buttons[-1].get_attribute(
+                "class")
             if last_page_button_class == "ng-scope disabled":
                 last_page_reached = True
             safety_counter += 1
@@ -73,15 +82,14 @@ class ScraperZermatt:
         return results
 
     def scrap(self, check_in_date, check_out_date):
-        vdisplay = Xvfb()
-        vdisplay.start()
         base_url = "https://www.zermatt.ch/en/content/view/full/4716/#/vacancy?"
-        full_url = base_url + "datefrom={}&dateto={}&rooms=1&adults1=2&type=all".format(check_in_date, check_out_date)
+        full_url = base_url + \
+            "datefrom={}&dateto={}&rooms=1&adults1=2&type=all".format(
+                check_in_date, check_out_date)
         self.response = webdriver.Chrome('../drivers/chromedriver')
         self.response.get(full_url)
         self.wait_for_load_finish()
         list_of_list_results = self.main_routine()
-        vdisplay.stop()
         master_list = []
         for li in list_of_list_results:
             master_list += li
@@ -92,7 +100,8 @@ class ScraperZermatt:
         while timer < 30:
             sleep(1)
             timer += 1
-            loading_string = self.response.find_elements_by_xpath('//div[@class="result_info ng-scope"]')
+            loading_string = self.response.find_elements_by_xpath(
+                '//div[@class="result_info ng-scope"]')
             try:
                 search_progress_string = loading_string[0].text
                 if "A total" in search_progress_string:
@@ -110,7 +119,6 @@ class ScraperZermatt:
 
 if __name__ == "__main__":
     scraper = ScraperZermatt()
-    result = scraper.scrap("17.05.2019", "19.05.2019")
+    result = scraper.scrap("17.08.2020", "19.08.2020")
     print(result)
     print(len(result))
-
