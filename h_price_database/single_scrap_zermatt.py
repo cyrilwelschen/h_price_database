@@ -23,7 +23,7 @@ class ScraperZermatt:
 
     def handle_cookies(self):
         cookieconsent = self.response.find_elements_by_xpath(
-            '//a[@aria-label="dismiss cookie message"]')
+            '//a[@id="CybotCookiebotDialogBodyLevelButtonLevelOptinAllowallSelection"]')
         if cookieconsent:
             cookieconsent[0].click()
             sleep(2)
@@ -58,6 +58,7 @@ class ScraperZermatt:
         safety_counter = 0
         results = []
         while not last_page_reached:
+            self.handle_cookies()
             results.append(self.analyse_page())
             # go to next page
             next_page_links = self.response.find_elements_by_xpath(
@@ -70,7 +71,7 @@ class ScraperZermatt:
                 except err.WebDriverException as e:
                     log.war(e)
                     self.handle_cookies()
-
+            """
             next_page_buttons = self.response.find_elements_by_xpath(
                 '//li[@ng-repeat="page in pages"]')
             last_page_button_class = next_page_buttons[-1].get_attribute(
@@ -80,15 +81,15 @@ class ScraperZermatt:
             safety_counter += 1
             if safety_counter > 30:
                 last_page_reached = True
+            """
+            last_page_reached = True
 
         print(safety_counter)
         return results
 
     def scrap(self, check_in_date, check_out_date):
-        base_url = "https://www.zermatt.ch/en/content/view/full/4716/#/vacancy?"
-        full_url = base_url + \
-            "datefrom={}&dateto={}&rooms=1&adults1=2&type=all".format(
-                check_in_date, check_out_date)
+        base_url = "https://www.zermatt.ch/content/view/full/59606?&"
+        full_url = base_url + "checkin={}&checkout={}&room=2".format(check_in_date, check_out_date)
         self.response = webdriver.Chrome()
         self.response.get(full_url)
         self.wait_for_load_finish()
@@ -100,9 +101,10 @@ class ScraperZermatt:
 
     def wait_for_load_finish(self):
         timer = 0
-        while timer < 30:
+        while timer < 10:
             sleep(1)
             timer += 1
+            """
             loading_string = self.response.find_elements_by_xpath(
                 '//div[@class="result_info ng-scope"]')
             try:
@@ -114,6 +116,7 @@ class ScraperZermatt:
             except AttributeError:
                 print("finder failed")
             print("loading since {} sec".format(timer))
+            """
 
     @staticmethod
     def dateformat():
@@ -122,6 +125,6 @@ class ScraperZermatt:
 
 if __name__ == "__main__":
     scraper = ScraperZermatt()
-    result = scraper.scrap("17.03.2021", "19.03.2021")
+    result = scraper.scrap("20210316", "20210319")
     print(result)
     print(len(result))
